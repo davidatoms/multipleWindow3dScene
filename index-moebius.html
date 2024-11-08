@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Möbius Strip Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        // Initialize Three.js scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add lighting to the scene
+        const ambientLight = new THREE.AmbientLight(0x404040);  // Soft white light
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        // Möbius strip parametric geometry
+        function mobiusStrip(u, v, target) {
+            // Map u and v to the correct ranges
+            u = u * Math.PI * 2;    // u goes from 0 to 2π
+            v = (v - 0.5) * 2;       // v goes from -1 to 1
+
+            // Möbius strip parameters
+            const R = 1;  // Radius of the central circle
+            const halfWidth = 0.3;  // Width of the Möbius strip
+
+            // Parametric equations
+            const x = (R + v * Math.cos(u / 2)) * Math.cos(u);
+            const y = v * Math.sin(u / 2);
+            const z = (R + v * Math.cos(u / 2)) * Math.sin(u);
+
+            // Set the target vector
+            target.set(x, y, z);
+        }
+
+        // Create the Möbius strip geometry using parametric geometry
+        const geometry = new THREE.ParametricGeometry(mobiusStrip, 100, 20);
+
+        // Material with shininess to create the wave effect
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x66ccff,          // Light blue color
+            side: THREE.DoubleSide,   // Show both sides of the strip
+            shininess: 30,            // Initial shininess level
+            flatShading: true,        // Flat shading for better segment visibility
+        });
+        const mobiusMesh = new THREE.Mesh(geometry, material);
+        scene.add(mobiusMesh);
+
+        // Set the camera position to better view the Möbius strip
+        camera.position.set(0, 3, 5);
+        camera.lookAt(0, 0, 0);
+
+        // Animation variables
+        let shininessDirection = 1;
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update shininess to create a "wave" effect along the strip
+            material.shininess += shininessDirection * 0.5;
+            if (material.shininess >= 100 || material.shininess <= 20) {
+                shininessDirection *= -1;  // Reverse direction of shininess change
+            }
+
+            // Render the scene with updated material properties
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
